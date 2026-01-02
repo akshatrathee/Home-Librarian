@@ -1,189 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { AppState, User, AiRecommendation, Book, ReadStatus, Persona } from '../types';
-import { getRecommendations, generatePersonas } from '../services/geminiService';
-import { loadState } from '../services/storageService';
+import React from 'react';
+import { User, Book, ReadStatus } from '../types';
 import { Icons } from './Icons';
 
 interface ProfileProps {
   user: User;
   allBooks: Book[];
   onUpdateUser: (u: User) => void;
+  onSettings: () => void;
+  onAddUser: () => void;
+  onBack: () => void;
 }
 
-interface RecCardProps {
-  rec: AiRecommendation;
-}
-
-const RecCard: React.FC<RecCardProps> = ({ rec }) => (
-  <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 flex flex-col h-full hover:border-indigo-500 transition-colors">
-    <div className="flex-1">
-      <h4 className="font-bold text-white text-lg leading-tight">{rec.title}</h4>
-      <p className="text-indigo-400 text-sm mb-2">{rec.author}</p>
-      <p className="text-slate-400 text-sm italic">"{rec.reason}"</p>
-    </div>
-    {rec.type === 'BUY_NEXT' && (
-       <div className="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center text-xs text-slate-500">
-          <span>External Recommendation</span>
-          <Icons.Money size={14} className="text-green-500" />
-       </div>
-    )}
-  </div>
-);
-
-const PersonaCard: React.FC<{ persona: Persona }> = ({ persona }) => (
-    <div className="bg-gradient-to-br from-indigo-900 to-purple-900 p-4 rounded-xl border border-indigo-500/50 shadow-lg relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-2 opacity-50"><Icons.Magic size={32} /></div>
-        <div className="relative z-10">
-            <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-1">{persona.universe}</h4>
-            <h3 className="text-xl font-bold text-white mb-2">You are {persona.character}</h3>
-            <p className="text-sm text-indigo-100/80">{persona.reason}</p>
-        </div>
-    </div>
-);
-
-export const Profile: React.FC<ProfileProps> = ({ user, allBooks, onUpdateUser }) => {
-  const [readNextRecs, setReadNextRecs] = useState<AiRecommendation[]>([]);
-  const [buyNextRecs, setBuyNextRecs] = useState<AiRecommendation[]>([]);
-  const [loadingRead, setLoadingRead] = useState(false);
-  const [loadingBuy, setLoadingBuy] = useState(false);
-  const [loadingPersonas, setLoadingPersonas] = useState(false);
-
-  const completedBooks = user.history.filter(h => h.status === ReadStatus.COMPLETED);
-  const readingBooks = user.history.filter(h => h.status === ReadStatus.READING);
-  const settings = loadState().aiSettings;
-
-  useEffect(() => {
-    if (readNextRecs.length === 0 && completedBooks.length > 0) fetchReadNext();
-    if (buyNextRecs.length === 0 && completedBooks.length > 0) fetchBuyNext();
-    if ((!user.personas || user.personas.length === 0) && completedBooks.length > 0) fetchPersonas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.id]);
-
-  const fetchReadNext = async () => {
-    setLoadingRead(true);
-    const recs = await getRecommendations(user, allBooks, 'READ_NEXT', settings);
-    setReadNextRecs(recs);
-    setLoadingRead(false);
-  };
-
-  const fetchBuyNext = async () => {
-    setLoadingBuy(true);
-    const recs = await getRecommendations(user, allBooks, 'BUY_NEXT', settings);
-    setBuyNextRecs(recs);
-    setLoadingBuy(false);
-  };
-
-  const fetchPersonas = async () => {
-      setLoadingPersonas(true);
-      const personas = await generatePersonas(user, allBooks, settings);
-      onUpdateUser({ ...user, personas });
-      setLoadingPersonas(false);
-  };
-
+export const Profile: React.FC<ProfileProps> = ({ user, allBooks, onSettings, onAddUser, onBack }) => {
   return (
-    <div className="p-6 space-y-12 pb-24">
-      {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-center gap-6 bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl font-bold text-white shadow-xl shrink-0">
-          {user.name.charAt(0)}
+    <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col animate-fade-in">
+      <div className="sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/50 pt-safe-top">
+        <div className="flex items-center justify-between px-4 h-16">
+          <button onClick={onBack} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-white">
+            <Icons.ChevronRight className="rotate-180" size={24} />
+          </button>
+          <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Family Profiles</h1>
+          <button onClick={onSettings} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-white relative">
+            <Icons.Settings size={24} />
+          </button>
         </div>
-        <div className="text-center md:text-left">
-          <h1 className="text-3xl font-bold text-white">{user.name}</h1>
-          <p className="text-slate-400">{user.role}</p>
-          <div className="flex flex-wrap gap-6 mt-3 text-slate-400 text-sm justify-center md:justify-start">
-            <div className="flex items-center gap-2">
-              <Icons.Book size={16} className="text-indigo-400" />
-              <span>{completedBooks.length} Read</span>
+        <div className="px-4 pb-4">
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Icons.Search className="text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
             </div>
-            <div className="flex items-center gap-2">
-              <Icons.Star size={16} className="text-yellow-400" />
-              <span>{user.favorites.length} Favorites</span>
+            <input className="block w-full pl-10 pr-3 py-3 rounded-xl border-none bg-white dark:bg-surface-card/50 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-surface-card transition-all shadow-sm" placeholder="Find a family member..." type="text"/>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5 pb-24">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">Members</h2>
+        </div>
+
+        {/* Current User Card */}
+        <div className="group relative bg-white dark:bg-surface-card border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm active:scale-[0.99] transition-all cursor-pointer hover:border-primary/50">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xl border-2 border-primary shadow-lg shadow-primary/20">
+                    {user.name.charAt(0)}
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-gradient-to-tr from-purple-500 to-indigo-500 rounded-full p-1 border-2 border-white dark:border-surface-card flex items-center justify-center w-6 h-6">
+                  <Icons.Child size={12} className="text-white" />
+                </div>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white leading-tight">{user.name}</h3>
+                <p className="text-xs font-medium text-slate-400 mt-0.5">{user.role} • {user.educationLevel}</p>
+              </div>
+            </div>
+            <Icons.ChevronRight className="text-slate-400 group-hover:text-primary transition-colors" />
+          </div>
+          
+          <div className="bg-slate-50 dark:bg-black/20 rounded-lg p-3 mb-4 flex items-center gap-3 border border-slate-100 dark:border-white/5">
+            <div className="w-8 h-10 bg-slate-200 dark:bg-slate-700 rounded flex-shrink-0 flex items-center justify-center">
+                <Icons.Book size={12} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-wide text-primary font-bold mb-0.5">Stats</p>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">
+                  {user.history.length > 0 ? `${user.history.length} Books in history` : "No history yet"}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-6 pt-2 border-t border-slate-100 dark:border-white/5">
+            <div>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">{user.history.filter(h => h.status === ReadStatus.COMPLETED).length}</span>
+              <span className="text-xs text-slate-400 ml-1">Read</span>
+            </div>
+            <div className="w-px h-8 bg-slate-200 dark:bg-white/10"></div>
+            <div>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">{user.favorites.length}</span>
+              <span className="text-xs text-slate-400 ml-1">Favorites</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Personas */}
-      {completedBooks.length > 2 && (
-          <section>
-              <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <Icons.User size={20} className="text-purple-400" />
-                      Your Literary Personas
-                  </h2>
-                  <button onClick={fetchPersonas} disabled={loadingPersonas} className="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-                      <Icons.Magic size={14} /> Refresh
-                  </button>
-              </div>
-              
-              {loadingPersonas ? (
-                  <div className="animate-pulse flex gap-4">
-                      <div className="w-full h-32 bg-slate-800 rounded-xl"></div>
-                      <div className="w-full h-32 bg-slate-800 rounded-xl"></div>
-                  </div>
-              ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {user.personas?.map((p, i) => <PersonaCard key={i} persona={p} />)}
-                      {(!user.personas || user.personas.length === 0) && (
-                          <div className="col-span-full text-center py-8 text-slate-500">Read more books to discover your persona!</div>
-                      )}
-                  </div>
-              )}
-          </section>
-      )}
-
-      {/* Recently Read Tray */}
-      {completedBooks.length > 0 && (
-          <section>
-              <h2 className="text-xl font-bold text-white mb-4">Recently Read</h2>
-              <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
-                  {completedBooks.sort((a,b) => new Date(b.dateFinished || 0).getTime() - new Date(a.dateFinished || 0).getTime()).slice(0, 5).map(h => {
-                      const book = allBooks.find(b => b.id === h.bookId);
-                      if (!book) return null;
-                      return (
-                          <div key={h.bookId} className="shrink-0 w-32 group relative cursor-pointer">
-                              <div className="aspect-[2/3] rounded-lg overflow-hidden bg-slate-800 shadow-lg relative">
-                                  {book.coverUrl && <img src={book.coverUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="" />}
-                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                      <div className="text-center p-2">
-                                          <div className="text-2xl font-bold text-white">{h.rating}★</div>
-                                          <div className="text-[10px] text-slate-300">Read {h.readCount || 1}x</div>
-                                      </div>
-                                  </div>
-                              </div>
-                              <p className="text-xs font-bold text-white mt-2 truncate">{book.title}</p>
-                              <p className="text-[10px] text-slate-400 truncate">{new Date(h.dateFinished || '').toLocaleDateString()}</p>
-                          </div>
-                      );
-                  })}
-              </div>
-          </section>
-      )}
-
-      {/* Read Next AI */}
-      <section>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Icons.Library size={20} className="text-blue-400" />
-            Read Next from Library
-          </h2>
-          <button 
-            onClick={fetchReadNext} 
-            disabled={loadingRead}
-            className="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded text-white flex gap-1 items-center"
-          >
-            {loadingRead ? 'Thinking...' : 'Refresh AI'}
-          </button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {readNextRecs.map((rec, i) => <RecCard key={i} rec={rec} />)}
-          {readNextRecs.length === 0 && !loadingRead && (
-             <div className="col-span-full text-center text-slate-500 py-8 border border-dashed border-slate-700 rounded-lg">
-               No suggestions yet. Read more books or refresh!
-             </div>
-          )}
-        </div>
-      </section>
+      <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light dark:via-background-dark to-transparent pt-12 pointer-events-none">
+        <button 
+            onClick={onAddUser}
+            className="pointer-events-auto w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-background-dark text-lg font-bold h-14 rounded-2xl shadow-[0_8px_20px_-6px_rgba(19,236,200,0.5)] active:scale-[0.98] transition-all text-white"
+        >
+          <Icons.Plus size={24} />
+          Add New Member
+        </button>
+      </div>
     </div>
   );
 };

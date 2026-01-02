@@ -63,14 +63,16 @@ const callGeminiImage = async (base64Image: string, settings: AiSettings) => {
   if(!apiKey) throw new Error("API Key missing");
 
   const ai = new GoogleGenAI({ apiKey });
+  // Ensure strict base64
   const data = base64Image.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
   
+  // Use gemini-3-flash-preview for multimodal analysis (image to text)
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: {
       parts: [
           { inlineData: { mimeType: 'image/jpeg', data: data } },
-          { text: `Analyze this book for the Home Librarian app (India context).
+          { text: `Analyze this book for the Home Librarian app.
           1. Extract ISBN, Title, Author.
           2. PROVIDE A SUMMARY (approx 50 words).
           3. Estimated Value in INR (be realistic, used book market).
@@ -79,9 +81,17 @@ const callGeminiImage = async (base64Image: string, settings: AiSettings) => {
           6. Min Age.` }
       ]
     },
-    config: { responseMimeType: "application/json", responseSchema: bookSchema }
+    config: { 
+        responseMimeType: "application/json",
+        responseSchema: bookSchema
+    } 
   });
-  return JSON.parse(response.text || "{}");
+  
+  let text = response.text || "{}";
+  if (text.includes('```json')) {
+      text = text.replace(/```json/g, '').replace(/```/g, '');
+  }
+  return JSON.parse(text);
 };
 
 const callGeminiRecs = async (prompt: string) => {

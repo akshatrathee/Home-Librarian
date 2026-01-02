@@ -1,5 +1,5 @@
 {
-  "name": "BiblioPi AI",
+  "name": "BiblioPi - Home Librarian",
   "description": "A self-hosted home library manager powered by Gemini. Track books, family reading habits, loans, and get AI recommendations.",
   "requestFramePermissions": [
     "camera"

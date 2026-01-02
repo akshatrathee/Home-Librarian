@@ -1,12 +1,30 @@
-version: '3.8'
+name: home-librarian
 
 services:
-  home-librarian:
-    build: .
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: home-librarian
     ports:
-      # Map host port 9090 to container port 9090
       - "9090:9090"
+    env_file:
+      - .env
     environment:
+      # These can be overridden by .env file
       - API_KEY=${API_KEY}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - NODE_ENV=production
+    volumes:
+      # Persist configuration or local db if needed
+      - ./data:/app/data
     restart: unless-stopped
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    # Limit logging to prevent disk filling on SD cards
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

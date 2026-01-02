@@ -1,6 +1,6 @@
-# 📚 BiblioPi: The AI Home Library
+# 📚 Home Librarian: The AI Home Library
 
-**BiblioPi** is a self-hosted "Home Book Library" application designed to run on a **Raspberry Pi**. It replaces spreadsheets and manual entry with AI-powered automation, helping you track reading habits, manage loans, and discover your next favorite book.
+**Home Librarian** is a self-hosted "Home Book Library" application designed to run on a **Raspberry Pi**. It replaces spreadsheets and manual entry with AI-powered automation, helping you track reading habits, manage loans, and discover your next favorite book.
 
 ![Status](https://img.shields.io/badge/status-production-green)
 ![Stack](https://img.shields.io/badge/stack-React_Vite_Docker-blue)
@@ -8,9 +8,21 @@
 
 ---
 
-## ✨ Features
+## 🏗️ Tech Stack & Versions
 
-This application includes a comprehensive suite of tools for the modern home librarian:
+We use the latest stable versions of modern web technologies to ensure performance on low-power devices.
+
+*   **Runtime**: Docker Compose V2 & Node.js 20 (Alpine)
+*   **Frontend**: React 18.3+
+*   **Build Tool**: Vite 5.4+
+*   **Language**: TypeScript 5.5+
+*   **Styling**: Tailwind CSS 3.4+
+*   **Server**: Nginx (Alpine)
+*   **AI SDK**: Google GenAI SDK (`@google/genai`) v0.2+
+
+---
+
+## ✨ Features
 
 1.  **Smart Scanning**: Use your phone camera to scan book barcodes (ISBN) for instant addition.
 2.  **AI Visual Recognition**: No barcode? Snap a photo of the cover. The AI identifies the book, pulls the summary, and auto-tags it.
@@ -22,56 +34,48 @@ This application includes a comprehensive suite of tools for the modern home lib
 8.  **Valuation Tracking**: Logs the purchase price (with date) and uses AI to estimate current market value.
 9.  **Precise Location**: Locate any book instantly. Supports hierarchy: Room -> Shelf -> Box.
 10. **Visual Location Manager**: Create digital rooms and shelves to map your physical house.
-11. **Analytics Dashboard**: Beautiful graphics showing:
-    *   Total Books & Total Value
-    *   Read counts by family member
-    *   Genre & Author breakdowns
-    *   Partially read books
-12. **AI Profile Suggestions**: "Read Next" suggestions based on books *already in your library* that match the user's past habits.
-13. **Smart Buy List**: A monthly "Buy Next" view where AI suggests top 10 books to purchase based on your specific taste and local availability.
+11. **Analytics Dashboard**: Beautiful graphics showing stats by genre, author, value, and reading habits.
+12. **AI Profile Suggestions**: "Read Next" suggestions based on books *already in your library*.
+13. **Smart Buy List**: Monthly "Buy Next" view where AI suggests books to purchase based on your taste.
 
 ---
 
 ## 🧠 AI Services Configuration
 
-You can choose between Cloud AI (Google Gemini) or Local AI (Ollama) in the **Settings** menu.
-
-### 1. Google Gemini (Recommended for Pi Zero/3/4)
+### 1. Google Gemini (Recommended)
 *   **Pros**: Extremely fast, no RAM usage on Pi, high accuracy.
-*   **Cons**: Requires Internet.
-*   **API Key**: Get a free key at [aistudio.google.com](https://aistudio.google.com). Set via `API_KEY` env var.
+*   **Setup**: Get a free key at [aistudio.google.com](https://aistudio.google.com) and set `API_KEY` in your `.env` file.
 
-### 2. Ollama (Recommended for Pi 5 / 8GB RAM)
+### 2. Ollama (Local LLM)
 *   **Pros**: 100% Private, Works offline.
-*   **Cons**: Slower generation, requires good hardware.
-*   **Setup**: Install [Ollama](https://ollama.com) on your Pi or network. No API key required, just the URL (default: `http://localhost:11434`).
-
-### 3. Voice Recognition
-*   The app uses the browser's native **Web Speech API** (free, built-in) for voice search. No API key required (unlike OpenAI Whisper).
+*   **Setup**: Install [Ollama](https://ollama.com). Point the app to your Ollama URL (default `http://localhost:11434`).
+*   **Recommended Models**: `llama3.2`, `mistral`, or `gemma2` (optimized for Pi 5 / 8GB RAM).
 
 ---
 
 ## 🛠️ Installation
 
 ### Prerequisites
-*   Docker & Docker Compose installed on your Raspberry Pi.
+*   Docker Desktop or Docker Engine + Docker Compose Plugin (V2).
 
 ### Deployment
+
 1.  **Clone the repo**:
     ```bash
-    git clone https://github.com/your-username/bibliopi.git
-    cd bibliopi
+    git clone https://github.com/your-username/home-librarian.git
+    cd home-librarian
     ```
 
-2.  **Set your API Key** (Optional, can be set in UI later):
-    Create a `.env` file:
+2.  **Configure Environment**:
+    Create your environment file:
     ```bash
-    API_KEY=your_google_api_key
+    cp .env.example .env
+    # Edit .env and add your API_KEY
     ```
 
-3.  **Run with Docker**:
+3.  **Run with Docker Compose**:
     ```bash
-    docker-compose up -d --build
+    docker compose up -d --build
     ```
 
 4.  **Access the App**:
@@ -79,15 +83,37 @@ You can choose between Cloud AI (Google Gemini) or Local AI (Ollama) in the **Se
 
 ---
 
+## 🔒 Remote Access (Tailscale)
+
+For secure access outside your home without opening ports or configuring complex VPNs:
+
+1.  **Install Tailscale on your Raspberry Pi**:
+    ```bash
+    curl -fsSL https://tailscale.com/install.sh | sh
+    sudo tailscale up
+    ```
+
+2.  **Install Tailscale on your Client (Phone/Laptop)**:
+    Download the Tailscale app from the App Store or tailscale.com.
+
+3.  **Access the App**:
+    Find your Pi's "Tailscale IP" (usually `100.x.y.z`) in the Tailscale dashboard.
+    Open `http://100.x.y.z:9090` in your browser.
+
+4.  **Important Note for Cameras**:
+    Modern browsers (Chrome/Safari) block camera access on "insecure" origins (http:// not localhost).
+    To fix this via Tailscale, use **Tailscale Serve** to get a valid HTTPS certificate:
+    ```bash
+    sudo tailscale serve --bg --https=443 localhost:9090
+    ```
+    Now you can access via `https://your-pi-name.tailscale.net`.
+
+---
+
 ## ❓ FAQ
 
-**Q: Is there a better framework than React 18 + Vite for this?**
-A: For a self-hosted app on low-power hardware like a Raspberry Pi, **React + Vite** is currently the best choice.
-*   **Next.js** requires a Node.js server running 24/7, consuming precious RAM.
-*   **React + Vite** compiles to static HTML/JS. The "processing" happens on your phone/laptop, not the Pi. The Pi just serves files (using Nginx), which takes negligible resources.
+**Q: Why use Nginx?**
+A: Nginx serves the static React files extremely efficiently and handles Gzip compression, which is crucial for loading the app quickly on mobile networks.
 
 **Q: How do I backup my data?**
-A: Go to the **Maintenance** tab in the app and click "Download Backup". This gives you a JSON file of your entire library, users, and history.
-
-**Q: The camera isn't working?**
-A: Browsers require HTTPS to access the camera on mobile devices (unless using localhost). If accessing via IP address, you may need to set up a reverse proxy (like Nginx Proxy Manager) or use Tailscale to get a secure connection.
+A: Go to the **Maintenance** tab in the app and click "Download Backup". This gives you a JSON file of your entire library.

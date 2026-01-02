@@ -83,8 +83,8 @@ const INITIAL_STATE: AppState = {
   loans: [],
   currentUser: null,
   theme: 'dark',
-  aiSettings: { provider: 'gemini', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3' },
-  dbSettings: { type: 'sqlite', host: 'localhost', name: 'bibliopi' },
+  aiSettings: { provider: 'gemini', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2' },
+  dbSettings: { type: 'sqlite', host: 'localhost', name: 'homelibrary' },
   backupSettings: { frequency: 'weekly', location: 'local', googleDriveConnected: false }
 };
 
