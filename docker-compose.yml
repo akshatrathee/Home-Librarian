@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  home-librarian:
+    build: .
+    container_name: home-librarian
+    ports:
+      # Map host port 9090 to container port 9090
+      - "9090:9090"
+    environment:
+      - API_KEY=${API_KEY}
+    restart: unless-stopped
